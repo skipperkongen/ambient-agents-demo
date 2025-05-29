@@ -1,6 +1,8 @@
 import os
+import time
 import requests
 from kafka import KafkaConsumer, KafkaProducer
+from kafka.errors import NoBrokersAvailable
 from langchain.llms import OpenAI
 from langgraph.graph import Graph
 
@@ -18,14 +20,34 @@ def generate_response_via_mcp(email_text: str) -> str:
     return r.json().get("response", "")
 
 
+def get_consumer() -> KafkaConsumer:
+    """Create a Kafka consumer, retrying until Kafka is ready."""
+    while True:
+        try:
+            return KafkaConsumer(
+                IN_TOPIC,
+                bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+                auto_offset_reset="earliest",
+                group_id="supervisor",
+            )
+        except NoBrokersAvailable:
+            print("Waiting for Kafka...")
+            time.sleep(5)
+
+
+def get_producer() -> KafkaProducer:
+    """Create a Kafka producer, retrying until Kafka is ready."""
+    while True:
+        try:
+            return KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+        except NoBrokersAvailable:
+            print("Waiting for Kafka...")
+            time.sleep(5)
+
+
 def main():
-    consumer = KafkaConsumer(
-        IN_TOPIC,
-        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
-        auto_offset_reset="earliest",
-        group_id="supervisor",
-    )
-    producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+    consumer = get_consumer()
+    producer = get_producer()
     for msg in consumer:
         email_text = msg.value.decode("utf-8")
         print(f"Supervisor received: {email_text}")

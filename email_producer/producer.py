@@ -1,6 +1,7 @@
 import os
 import time
 from kafka import KafkaProducer
+from kafka.errors import NoBrokersAvailable
 from langchain.llms import OpenAI
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
@@ -16,8 +17,18 @@ def generate_email():
     return llm(prompt)
 
 
+def get_producer():
+    """Create a Kafka producer, retrying until Kafka is ready."""
+    while True:
+        try:
+            return KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+        except NoBrokersAvailable:
+            print("Waiting for Kafka...")
+            time.sleep(5)
+
+
 def main():
-    producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS)
+    producer = get_producer()
     while True:
         email = generate_email()
         producer.send(TOPIC, email.encode("utf-8"))
