@@ -9,8 +9,7 @@ service emails about food deliveries.
 
 ## Components
 
-- **Kafka** – single-node broker (KRaft mode) used for passing emails between
-  agents.
+- **Kafka** – message broker used for passing emails between agents.
 - **Email Producer** – generates synthetic customer complaints using an LLM and
   publishes them to the `incoming-emails` topic.
 - **Responder Agent** – HTTP service that uses an LLM to craft empathetic
