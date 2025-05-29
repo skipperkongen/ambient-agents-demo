@@ -1,0 +1,6 @@
+langchain
+langgraph
+langsmith
+kafka-python
+requests
+mcp

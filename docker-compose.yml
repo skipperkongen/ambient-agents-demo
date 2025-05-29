@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+  kafka:
+    image: bitnami/kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+  email_producer:
+    build: ./email_producer
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - kafka
+  responder:
+    build: ./responder
+  supervisor:
+    build: ./supervisor
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - RESPONDER_URL=http://responder:8000/respond
+    depends_on:
+      - kafka
+      - responder
