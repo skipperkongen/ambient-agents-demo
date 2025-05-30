@@ -1,6 +1,9 @@
 # ambient-agents-demo
 A demo of creating distributed ambient agents using different coding agents.
 
+Inspirations:
+- https://blog.langchain.dev/introducing-ambient-agents/
+
 ## Prompts
 
 ### Prompt 1
