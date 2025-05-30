@@ -17,6 +17,8 @@ The multi agents should only communicate over the network using MCP where approp
 
 > branch `main-codex`
 
+Number of burn downs: 1
+
 Attempts:
 - Used [prompt 1](#prompt-1), but the code didn't work in too many places. Learned about KRaft mode in Kafka.
 
