@@ -18,7 +18,7 @@ The multi agents should only communicate over the network using MCP where approp
 > branch `main-codex`
 
 Attempts:
-- Used [prompt 1](#Prompt 1), but the code didn't work in too many places. Learned about KRaft mode in Kafka.
+- Used [prompt 1](#prompt-1), but the code didn't work in too many places. Learned about KRaft mode in Kafka.
 
 
 ## Google Jules
@@ -26,5 +26,5 @@ Attempts:
 > branch `main-jules`
 
 Attempts:
-- Used [prompt 1](#Prompt 1), but the task was too big, so Jules timed out.
+- Used [prompt 1](#prompt-1), but the task was too big, so Jules timed out.
 
