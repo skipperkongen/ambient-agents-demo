@@ -4,6 +4,27 @@ A demo of creating distributed ambient agents using different coding agents.
 Inspirations:
 - https://blog.langchain.dev/introducing-ambient-agents/
 
+## Demo use case
+
+A food delivery company is implementing an AI-powered customer service. Customers write messages to the company and the company responds to and acts on those messages using a combination of AI agents and human agents.
+
+Example of exchange:
+
+```
+Customer 1: I just received my food but it was the wrong order. I ordered burgers, not hot dogs. Please send me the right order or give me my money back.
+AI: Sorry about that, we will send you a delicious burger right away.
+
+Customer 2: The food was cold when I received it. I want my money back.
+AI agent: Sorry about that, I have handled your case over to my human colleague who will review your case, since it involves a request for monetary compensation.
+Human agent: I have reviewed your case and approved your request to get your money back.
+```
+
+## Concerns
+
+- Tone of voice
+- Taking risky actions automatically, such as monetary compensation.
+
+
 ## Prompts
 
 ### Prompt 1
