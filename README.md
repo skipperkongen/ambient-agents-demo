@@ -21,11 +21,12 @@ Human agent: I have reviewed your case and approved your request to get your mon
 
 ## Concerns
 
-- Tone of voice
-- Taking risky actions automatically, such as monetary compensation.
+- Tone of voice: a customer service department should always be polite.
+- Risk: taking risky actions automatically, such as monetary compensation, should be guard railed, e.g., by requiring a human in the loop.
 
+## Previous attempts
 
-## Prompts
+I tried using these prompts with Google Jules and OpenAI Codex. Not super successful.
 
 ### Prompt 1
 
@@ -50,21 +51,4 @@ Worker 1) generate and publish dummy events to `incoming-messages`, once per sec
 Worker 2) consume events from `incoming-messages`, genererate a dummy response event and publish to `outgoing-messages`. Again, the event should have fields typical of an email.
 Overwrite the README.md and add info on how to run the demo. 
 ```
-
-## OpenAI Codex
-
-> branch `main-codex`
-
-Number of burn downs: 1
-
-Attempts:
-- Used [prompt 1](#prompt-1), but the code didn't work in too many places. Learned about KRaft mode in Kafka.
-
-
-## Google Jules
-
-> branch `main-jules`
-
-Attempts:
-- Used [prompt 1](#prompt-1), but the task was too big, so Jules timed out.
 
