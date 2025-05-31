@@ -46,3 +46,32 @@ The example domain is food deliveries, where customers complain about their deli
 The multi agents should only communicate over the network using MCP where appropriate.
 ```
 
+
+## Running the demo
+
+The demo uses `docker-compose` to start a single Kafka broker in KRaft mode and two Python workers. One worker continuously produces dummy customer emails to the `incoming-messages` topic. The second worker consumes those messages and writes a simple reply to the `outgoing-messages` topic.
+
+### Prerequisites
+
+- Docker and docker-compose installed
+
+### Steps
+
+1. Start the environment:
+
+   ```bash
+   docker-compose up
+   ```
+
+   This will pull the required images, start Kafka, create the two topics and run both workers.
+
+2. You should see the producer outputting messages once per second and the consumer printing the generated responses.
+
+3. Stop the demo with `Ctrl+C` and remove the containers with:
+
+   ```bash
+   docker-compose down
+   ```
+
+
+
