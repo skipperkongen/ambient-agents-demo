@@ -217,7 +217,7 @@ HTML_LAYOUT = """
     // Auto-refresh received messages section every 5 seconds
     // This is a simple polling mechanism. For production, WebSockets or Server-Sent Events are better.
     // setInterval(function() {
-    //    fetch("{{ url_for('get_received_messages_data') }}")
+    //    // fetch("{{ url_for('get_received_messages_data') }}")
     //        .then(response => response.json())
     //        .then(data => {
     //            const container = document.getElementById('received-messages-container');
