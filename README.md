@@ -1,48 +1,102 @@
-# ambient-agents-demo
-A demo of creating distributed ambient agents using different coding agents.
+# AI-Powered Customer Service Demo with Kafka
 
-Inspirations:
-- https://blog.langchain.dev/introducing-ambient-agents/
+This project demonstrates a simplified AI-powered customer service workflow for a food delivery company using Apache Kafka in KRaft mode. Customers' messages are sent to an `incoming-messages` topic, processed by a worker, and responses are published to an `outgoing-messages` topic.
 
-## Attempt 1
+## Components
 
-Prompt 1:
+1.  **`docker-compose.yml`**:
+    *   Sets up a single-node Kafka broker running in KRaft mode (without Zookeeper).
+    *   Defines a `kafka-setup` service that automatically creates two topics: `incoming-messages` and `outgoing-messages`.
+    *   Defines services for a `producer` and a `consumer` application, built using Docker.
+2.  **`producer.py` (Worker 1)**:
+    *   A Python script that simulates incoming customer messages.
+    *   Generates dummy messages (with fields like `message_id`, `customer_id`, `timestamp`, `subject`, `body`) once per second.
+    *   Publishes these messages to the `incoming-messages` Kafka topic.
+    *   This script is containerized and managed by `docker-compose`.
+3.  **`consumer.py` (Worker 2)**:
+    *   A Python script that simulates an AI agent processing customer messages.
+    *   Consumes messages from the `incoming-messages` topic.
+    *   Generates a dummy response (with fields like `original_message_id`, `response_id`, `timestamp`, `responder_type`, `body`).
+    *   The response logic includes a basic simulation of escalating to a human agent for refund requests.
+    *   Publishes these responses to the `outgoing-messages` Kafka topic.
+    *   This script is also containerized and managed by `docker-compose`.
+4.  **`Dockerfile.producer` & `Dockerfile.consumer`**:
+    *   Dockerfiles used to build the images for the producer and consumer Python applications.
+5.  **`requirements.txt`**:
+    *   Lists the Python dependency (`kafka-python`) for the workers.
 
+## Prerequisites
+
+*   [Docker](https://docs.docker.com/get-docker/)
+*   [Docker Compose](https://docs.docker.com/compose/install/) (Usually included with Docker Desktop)
+
+## Running the Demo
+
+1.  **Clone the repository (if you haven't already):**
+    ```bash
+    # git clone <repository-url>
+    # cd <repository-directory>
+    ```
+
+2.  **Build and start all services:**
+    This command will build the Docker images for the producer and consumer (if not already built) and start all services (Kafka, producer, consumer) in detached mode.
+    ```bash
+    docker-compose up --build -d
+    ```
+
+3.  **View Logs:**
+
+    *   **To see the logs of all services:**
+        ```bash
+        docker-compose logs -f
+        ```
+    *   **To follow logs for a specific service (e.g., producer):**
+        ```bash
+        docker-compose logs -f producer
+        ```
+    *   **For the consumer:**
+        ```bash
+        docker-compose logs -f consumer
+        ```
+    *   **For Kafka:**
+        ```bash
+        docker-compose logs -f kafka
+        ```
+    You should see the producer sending messages and the consumer receiving them and sending responses.
+
+4.  **Inspect Kafka Topics (Optional):**
+
+    You can inspect the messages flowing through Kafka topics directly using Kafka's command-line tools.
+
+    *   **Open a new terminal window.**
+    *   **To view messages in `incoming-messages`:**
+        ```bash
+        docker-compose exec kafka kafka-console-consumer.sh           --bootstrap-server kafka:9092           --topic incoming-messages           --from-beginning
+        ```
+    *   **To view messages in `outgoing-messages`:**
+        ```bash
+        docker-compose exec kafka kafka-console-consumer.sh           --bootstrap-server kafka:9092           --topic outgoing-messages           --from-beginning
+        ```
+    Press `Ctrl+C` in the terminal to stop watching the topic.
+
+5.  **Stopping the Demo:**
+    To stop and remove all the containers, networks, and volumes defined in `docker-compose.yml`:
+    ```bash
+    docker-compose down
+    ```
+    If you want to remove the Kafka data volume as well (all messages will be lost), use:
+    ```bash
+    docker-compose down -v
+    ```
+
+## Project Structure
 ```
-
-Implement an AI-powered customer service for a food delivery company. Customers write messages to the company and the company responds to and acts on those messages using a combination of AI agents and human agents.
-Examples:
-> Customer: I just received my food but it was the wrong order. I ordered burgers, not hot dogs. Please send me the right order or give me my money back.
-> AI: Sorry about that, we will send you a delicious burger right away.
-> Customer: The food was cold when I received it. I want my money back.
-> AI agent: Sorry about that, I have handled your case over to my human colleague who will review your case, since it involves a request for monetary compensation.
-> Human agent: I have reviewed your case and approved your request to get your money back.
-
-Using docker-compose, create a small demo that runs Kafka in KRaft mode with two topics called `incoming-messages` and `outgoing-messages`.
-Create two dummy workers written in Python:
-Worker 1) generate and publish dummy events to `incoming-messages`, once per second. The event should have fields typical of an email.
-Worker 2) consume events from `incoming-messages`, genererate a dummy response event and publish to `outgoing-messages`. Again, the event should have fields typical of an email.
-Add info to README.md about how to run the demo.
+.
+├── docker-compose.yml     # Docker Compose setup for Kafka, producer, and consumer
+├── Dockerfile.consumer    # Dockerfile for the consumer application
+├── Dockerfile.producer    # Dockerfile for the producer application
+├── producer.py            # Python script for Worker 1 (message generation)
+├── consumer.py            # Python script for Worker 2 (message processing and response)
+├── requirements.txt       # Python dependencies
+└── README.md              # This file
 ```
-
-## Concerns
-
-- Tone of voice: a customer service department should always be polite.
-- Risk: taking risky actions automatically, such as monetary compensation, should be guard railed, e.g., by requiring a human in the loop.
-
-## Previous attempts
-
-I tried using these prompts with Google Jules and OpenAI Codex. Not super successful. Too much at the same time, too many bugs.
-
-### Prompt 1
-
-Here I tried to one-shot the prompt to create the demo all at once. It failed.
-
-```
-Create an ambient agent demo using MCP, langchain, langgraph, langsmith, Kafka and docker-compose where agents running in different docker containers collaborate to handle customer service emails.
-Create a fake email producer that uses an LLM to write synthetic customer service emails and publish them to kafka topic 'incoming-emails'.
-Have a supervisor agent subscribe to these events and connect with tools and other agents over MCP and produce responses to the emails on kafka topic outgoing-emails''.
-The example domain is food deliveries, where customers complain about their deliveries in different ways.
-The multi agents should only communicate over the network using MCP where appropriate.
-```
-
