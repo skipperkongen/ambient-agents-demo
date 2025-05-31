@@ -153,11 +153,41 @@ HTML_TEMPLATE = '''
   </div>
   <script>
     function fetchReviewMessages() {
+      const reviewContainer = document.getElementById('review-messages-container');
+      const existingTextareas = reviewContainer.querySelectorAll("textarea[name='response_body']");
+      const textareaValues = {};
+
+      existingTextareas.forEach(textarea => {
+        const form = textarea.closest('form');
+        if (form && form.action) {
+          const actionUrlParts = form.action.split('/');
+          const messageId = actionUrlParts[actionUrlParts.length - 1];
+          if (messageId) {
+            textareaValues[messageId] = textarea.value;
+          }
+        }
+      });
+
       fetch("{{ url_for('get_review_messages_data') }}")
         .then(response => response.json())
         .then(data => {
           if (data.html_content) {
-            document.getElementById('review-messages-container').innerHTML = data.html_content;
+            // Preserve scroll position
+            const scrollPosition = reviewContainer.scrollTop;
+            reviewContainer.innerHTML = data.html_content;
+            reviewContainer.scrollTop = scrollPosition; // Restore scroll position
+
+            const newTextareas = reviewContainer.querySelectorAll("textarea[name='response_body']");
+            newTextareas.forEach(textarea => {
+              const form = textarea.closest('form');
+              if (form && form.action) {
+                const actionUrlParts = form.action.split('/');
+                const messageId = actionUrlParts[actionUrlParts.length - 1];
+                if (messageId && textareaValues.hasOwnProperty(messageId)) {
+                  textarea.value = textareaValues[messageId];
+                }
+              }
+            });
           }
         })
         .catch(error => console.error('Error fetching review messages:', error));
