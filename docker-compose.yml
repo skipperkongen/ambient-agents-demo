@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9093:9093" # External listener for host access if needed
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9094,EXTERNAL://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9094
+      # Topic settings
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=false
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - kafka_data:/bitnami/kafka
+    networks:
+      - kafka-net
+
+  kafka-setup:
+    image: bitnami/kafka:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command: >
+      -c "
+        echo 'Waiting for Kafka to be ready...'
+        sleep 5
+        echo 'Creating topics...'
+        kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic incoming-messages --partitions 1 --replication-factor 1
+        kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic outgoing-messages --partitions 1 --replication-factor 1
+        echo 'Topics created.'
+        kafka-topics.sh --bootstrap-server kafka:9092 --list
+      "
+    networks:
+      - kafka-net
+
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    depends_on:
+      kafka-setup:
+        condition: service_completed_successfully # Ensure topics are created
+    networks:
+      - kafka-net
+    restart: on-failure
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    depends_on:
+      kafka-setup:
+        condition: service_completed_successfully # Ensure topics are created
+    networks:
+      - kafka-net
+    restart: on-failure
+
+volumes:
+  kafka_data:
+
+networks:
+  kafka-net:
+    driver: bridge
