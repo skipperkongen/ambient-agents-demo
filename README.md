@@ -49,7 +49,7 @@ The multi agents should only communicate over the network using MCP where approp
 
 ## Running the demo
 
-The demo uses `docker-compose` to start a single Kafka broker in KRaft mode and two Python workers. One worker continuously produces dummy customer emails to the `incoming-messages` topic. The second worker consumes those messages and writes a simple reply to the `outgoing-messages` topic.
+This project ships with a `docker-compose.yml` file that sets up a Kafka broker and two Python workers. The producer worker publishes dummy customer emails to the `incoming-messages` topic and the consumer replies on the `outgoing-messages` topic.
 
 ### Prerequisites
 
@@ -57,21 +57,31 @@ The demo uses `docker-compose` to start a single Kafka broker in KRaft mode and 
 
 ### Steps
 
-1. Start the environment:
+1. From the repository root, start the services:
 
    ```bash
    docker-compose up
    ```
 
-   This will pull the required images, start Kafka, create the two topics and run both workers.
+   This command downloads the images (if needed), starts Kafka in KRaft mode, creates the topics and launches both workers. Logs from the producer and consumer will be printed in the terminal.
 
-2. You should see the producer outputting messages once per second and the consumer printing the generated responses.
-
-3. Stop the demo with `Ctrl+C` and remove the containers with:
+2. Stop the demo with `Ctrl+C`. To remove the containers and the Kafka volume, run:
 
    ```bash
    docker-compose down
    ```
+
+### Running the scripts manually
+
+If you already have a Kafka broker available on `localhost:9092`, you can execute the workers outside of Docker:
+
+```bash
+pip install -r requirements.txt
+python producer/producer.py
+python consumer/consumer.py
+```
+
+The producer will emit dummy messages and the consumer will print the generated responses.
 
 
 
