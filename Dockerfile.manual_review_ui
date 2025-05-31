@@ -1,0 +1,19 @@
+# Base image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+# Add Flask to requirements if it's not there, otherwise this pip install will handle it
+RUN pip install --no-cache-dir Flask kafka-python
+
+# Copy application code
+COPY manual_review_ui.py .
+
+# Expose port
+EXPOSE 5001
+
+# Command to run the application
+CMD ["python", "manual_review_ui.py"]
