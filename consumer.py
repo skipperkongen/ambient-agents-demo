@@ -112,17 +112,18 @@ def main():
 
                 response_data = generate_response(incoming_data)
 
-                if random.random() < 0.5:
+                if response_data['responder_type'] == "AI_ESCALATION_TO_HUMAN":
                     try:
                         # Send original message to manual-review topic
-                        future = producer.send(MANUAL_REVIEW_TOPIC, value=incoming_data)
-                        future.get(timeout=10) # Block for synchronous send
-                        logging.info(f"Forwarded message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}'")
-                        continue # Skip sending AI response to outgoing-messages
+                        escalate_future = producer.send(MANUAL_REVIEW_TOPIC, value=incoming_data)
+                        escalate_future.get(timeout=10) # Block for synchronous send
+                        logging.info(f"Forwarded message {incoming_data.get('message_id')} for human review to '{MANUAL_REVIEW_TOPIC}' due to AI_ESCALATION_TO_HUMAN.")
                     except KafkaError as ke:
-                        logging.error(f"Failed to send message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}': {ke}")
+                        logging.error(f"Failed to send message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}' for escalation: {ke}")
                     except Exception as e:
-                        logging.error(f"An unexpected error occurred while sending message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}': {e}")
+                        logging.error(f"An unexpected error occurred while sending message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}' for escalation: {e}")
+                        # Decide if we should still send the HUMAN_ESCALATION_MESSAGE or not.
+                        # For now, we'll let it proceed to send the response to OUTGOING_TOPIC as the issue is with escalation, not the response itself.
 
                 logging.info(f"Sending response for {response_data['original_message_id']} by {response_data['responder_type']}")
 
