@@ -51,17 +51,6 @@ services:
     networks:
       - kafka-net
 
-  producer:
-    build:
-      context: .
-      dockerfile: Dockerfile.producer
-    depends_on:
-      kafka-setup:
-        condition: service_completed_successfully # Ensure topics are created
-    networks:
-      - kafka-net
-    restart: on-failure
-
   consumer:
     build:
       context: .
@@ -83,6 +72,22 @@ services:
       - kafka-net
     environment:
       - KAFKA_BROKER=kafka:9092 # Pass Kafka broker address
+    depends_on:
+      kafka-setup:
+        condition: service_completed_successfully
+    restart: on-failure
+
+  email_client_ui: # New service for the email client UI
+    build:
+      context: .
+      dockerfile: Dockerfile.email_client_ui # Will be created in the next step
+    ports:
+      - "5002:5002" # Expose port 5002 for this UI
+    networks:
+      - kafka-net
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - FLASK_DEBUG=0 # Example: ensure debug is off for production-like thread behavior
     depends_on:
       kafka-setup:
         condition: service_completed_successfully

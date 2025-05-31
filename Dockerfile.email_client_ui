@@ -1,0 +1,19 @@
+# Base image
+FROM python:3.9-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+# Ensure Flask and kafka-python are installed (they are in requirements.txt)
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY email_client_ui.py .
+
+# Expose port for the Email Client UI
+EXPOSE 5002
+
+# Command to run the application
+CMD ["python", "email_client_ui.py"]
