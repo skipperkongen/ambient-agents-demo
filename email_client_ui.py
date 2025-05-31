@@ -251,10 +251,6 @@ RECEIVED_MESSAGES_PARTIAL_HTML = """
 {% endif %}
 """
 
-@app.before_first_request
-def initialize_app():
-    start_consumer_thread_if_needed()
-
 @app.route('/')
 def home_route():
     start_consumer_thread_if_needed() # Ensure consumer is running
@@ -304,6 +300,11 @@ def send_message_route():
 
     return redirect(url_for('home_route'))
 
+# The consumer thread is started here when running the app directly
+# (i.e., not using `flask run` which might initialize things differently).
+# This ensures the consumer starts in the main Werkzeug process if in debug mode,
+# or directly if not in debug mode. This replaces the deprecated @app.before_first_request
+# and direct call in `home_route` for initial thread startup.
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5002))
     # Thread start is handled by before_first_request or the start_consumer_thread_if_needed logic
