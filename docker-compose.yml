@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: kafka
+    environment:
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  topic-init:
+    image: bitnami/kafka:3.5
+    depends_on:
+      - kafka
+    entrypoint: ["/scripts/create-topics.sh"]
+    volumes:
+      - ./scripts/create-topics.sh:/scripts/create-topics.sh:ro
+
+  producer:
+    image: python:3.11-slim
+    depends_on:
+      - kafka
+      - topic-init
+    volumes:
+      - ./producer:/app
+      - ./requirements.txt:/requirements.txt:ro
+    working_dir: /app
+    command: bash -c "pip install -r /requirements.txt && python producer.py"
+
+  consumer:
+    image: python:3.11-slim
+    depends_on:
+      - kafka
+      - topic-init
+    volumes:
+      - ./consumer:/app
+      - ./requirements.txt:/requirements.txt:ro
+    working_dir: /app
+    command: bash -c "pip install -r /requirements.txt && python consumer.py"
+
+volumes:
+  kafka_data:
+
