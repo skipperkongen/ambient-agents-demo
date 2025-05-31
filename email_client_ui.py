@@ -4,7 +4,7 @@ import time
 import uuid
 import os
 import random
-from flask import Flask, render_template_string, request, redirect, url_for
+from flask import Flask, render_template_string, request, redirect, url_for, jsonify
 from kafka import KafkaConsumer, KafkaProducer
 from kafka.errors import KafkaError
 import logging
@@ -216,16 +216,16 @@ HTML_LAYOUT = """
 
     // Auto-refresh received messages section every 5 seconds
     // This is a simple polling mechanism. For production, WebSockets or Server-Sent Events are better.
-    // setInterval(function() {
-    //    {# // fetch("{{ url_for('get_received_messages_data') }}") #}
-    //        .then(response => response.json())
-    //        .then(data => {
-    //            const container = document.getElementById('received-messages-container');
-    //            if (data.html_content) {
-    //                container.innerHTML = data.html_content;
-    //            }
-    //        });
-    // }, 5000);
+    setInterval(function() {
+        fetch("{{ url_for('get_received_messages_data') }}")
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('received-messages-container');
+                if (data.html_content) {
+                    container.innerHTML = data.html_content;
+                }
+            });
+    }, 5000);
   </script>
 </body>
 </html>
@@ -264,12 +264,12 @@ def home_route():
                                   outgoing_topic_name=OUTGOING_TOPIC)
 
 # Optional: Route for AJAX polling if you uncomment the JavaScript
-# @app.route('/get_received_messages')
-# def get_received_messages_data():
-#     with messages_lock:
-#         current_messages = list(received_messages)
-#     html_content = render_template_string(RECEIVED_MESSAGES_PARTIAL_HTML, received_messages_list=current_messages)
-#     return jsonify(html_content=html_content)
+@app.route('/get_received_messages')
+def get_received_messages_data():
+    with messages_lock:
+        current_messages = list(received_messages)
+    html_content = render_template_string(RECEIVED_MESSAGES_PARTIAL_HTML, received_messages_list=current_messages)
+    return jsonify(html_content=html_content)
 
 @app.route('/send', methods=['POST'])
 def send_message_route():
