@@ -44,6 +44,7 @@ services:
         echo 'Creating topics...'
         kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic incoming-messages --partitions 1 --replication-factor 1
         kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic outgoing-messages --partitions 1 --replication-factor 1
+        kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic manual-review --partitions 1 --replication-factor 1
         echo 'Topics created.'
         kafka-topics.sh --bootstrap-server kafka:9092 --list
       "
@@ -70,6 +71,21 @@ services:
         condition: service_completed_successfully # Ensure topics are created
     networks:
       - kafka-net
+    restart: on-failure
+
+  manual-review-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.manual_review_ui
+    ports:
+      - "5001:5001" # Expose port 5001 on the host
+    networks:
+      - kafka-net
+    environment:
+      - KAFKA_BROKER=kafka:9092 # Pass Kafka broker address
+    depends_on:
+      kafka-setup:
+        condition: service_completed_successfully
     restart: on-failure
 
 volumes:

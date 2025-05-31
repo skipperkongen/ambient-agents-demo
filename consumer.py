@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 KAFKA_BROKER = 'kafka:9092' # Assumes running within docker-compose network
 INCOMING_TOPIC = 'incoming-messages'
 OUTGOING_TOPIC = 'outgoing-messages'
+MANUAL_REVIEW_TOPIC = 'manual-review'
 CONSUMER_GROUP_ID = 'customer-service-group'
 
 # Response templates
@@ -110,6 +111,19 @@ def main():
                 logging.info(f"Received message: {incoming_data.get('message_id')} - {incoming_data.get('subject')}")
 
                 response_data = generate_response(incoming_data)
+
+                if random.random() < 0.5:
+                    try:
+                        # Send original message to manual-review topic
+                        future = producer.send(MANUAL_REVIEW_TOPIC, value=incoming_data)
+                        future.get(timeout=10) # Block for synchronous send
+                        logging.info(f"Forwarded message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}'")
+                        continue # Skip sending AI response to outgoing-messages
+                    except KafkaError as ke:
+                        logging.error(f"Failed to send message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}': {ke}")
+                    except Exception as e:
+                        logging.error(f"An unexpected error occurred while sending message {incoming_data.get('message_id')} to '{MANUAL_REVIEW_TOPIC}': {e}")
+
                 logging.info(f"Sending response for {response_data['original_message_id']} by {response_data['responder_type']}")
 
                 future = producer.send(OUTGOING_TOPIC, value=response_data)
